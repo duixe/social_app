@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -30,7 +29,7 @@ func initConfig() AppConfig {
 		Port:                   GetString("PORT", ":8080"),
 		DBUser:                 GetString("DB_USER", "root"),
 		DBPassword:             GetString("DB_PASSWORD", ""),
-		DBAddress:              fmt.Sprintf("%s:%s", GetString("DB_HOST", "127.0.0.1"), GetString("DB_PORT", "3306")),
+		DBAddress:              GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/gosocial?sslmode=disable"),
 		DBName:                 GetString("DB_NAME", "go_rest_first"),
 		JWTExpirationInSeconds: GetInt("JWT_EXP", 3600*24*7),
 		JWTSecret: GetString("JWT_SECRET", "it-just-a-secret-duh:)"),
