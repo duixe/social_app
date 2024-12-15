@@ -16,6 +16,8 @@ type AppConfig struct {
 	DBName                 string
 	JWTExpirationInSeconds int64
 	JWTSecret              string
+	CurrentEnv             string
+	Version                string
 }
 
 // create a singleton to be used in the app
@@ -32,7 +34,9 @@ func initConfig() AppConfig {
 		DBAddress:              GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/gosocial?sslmode=disable"),
 		DBName:                 GetString("DB_NAME", "go_rest_first"),
 		JWTExpirationInSeconds: GetInt("JWT_EXP", 3600*24*7),
-		JWTSecret: GetString("JWT_SECRET", "it-just-a-secret-duh:)"),
+		JWTSecret:              GetString("JWT_SECRET", "it-just-a-secret-duh:)"),
+		CurrentEnv:             GetString("ENV", "development"),
+		Version:                GetString("APP_VERSION", "1.0.0"),
 	}
 }
 
