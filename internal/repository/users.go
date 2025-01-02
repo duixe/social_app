@@ -38,3 +38,39 @@ func (s *UsersRepository) Create (ctx context.Context, user *models.User) error 
 
 	return nil
 }
+
+func (s *UsersRepository) GetByID(ctx context.Context, userID int64) (*models.User, error) {
+	query := `
+		SELECT id, first_name, last_name, username, email, password, created_at
+		FROM users
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+
+	user := &models.User{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		userID,
+	).Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Username,
+		&user.Password,
+		&user.Email,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
