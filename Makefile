@@ -16,3 +16,12 @@ migrate-down:
 .PHONY: seed
 seed:
 	@go run cmd/migrate/seeder/main.go
+
+.PHONY: down
+down:
+	docker-compose down
+
+# Start the Docker containers
+.PHONY: up
+up:
+	docker-compose up --force-recreate -d

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"	
+	"errors"
 
 	"github.com/duixe/social_app/internal/models"
 	"github.com/lib/pq"
@@ -76,7 +76,7 @@ func (s *PostRepository) GetByID(ctx context.Context, id int64) (*models.Post, e
 	return &post, nil
 }
 
-func (s *PostRepository) Delete (ctx context.Context, id int64) error {
+func (s *PostRepository) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM posts WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
@@ -99,7 +99,7 @@ func (s *PostRepository) Delete (ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *PostRepository) Update (ctx context.Context, post *models.Post) error {
+func (s *PostRepository) Update(ctx context.Context, post *models.Post) error {
 	query := `
 		UPDATE posts
 		SET title = $1, content = $2, version = version + 1
@@ -112,10 +112,10 @@ func (s *PostRepository) Update (ctx context.Context, post *models.Post) error {
 
 	err := s.db.QueryRowContext(
 		ctx,
-		query, 
-		post.Title, 
-		post.Content, 
-		post.ID, 
+		query,
+		post.Title,
+		post.Content,
+		post.ID,
 		post.Version,
 	).Scan(&post.Version)
 	if err != nil {
@@ -128,4 +128,63 @@ func (s *PostRepository) Update (ctx context.Context, post *models.Post) error {
 	}
 
 	return nil
+}
+
+func (s *PostRepository) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]models.PostWithMetadata, error) {
+	query := `
+		SELECT
+			p.id,
+			p.user_id,
+			p.title,
+			p.content,
+			p.tags,
+			u.email,
+			p.version,
+			p.created_at,
+			COUNT(c.id) AS comments_count
+		FROM
+			posts p
+			LEFT JOIN comments c ON c.post_id = p.id
+			LEFT JOIN users u on u.id = p.user_id
+			JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+			WHERE f.user_id = $1 OR p.user_id = $1
+		GROUP BY
+			p.id, u.email
+		ORDER BY
+			p.created_at ` + fq.Sort +`
+		LIMIT $2 OFFSET $3
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var feed []models.PostWithMetadata
+	for rows.Next() {
+		var p models.PostWithMetadata
+		err := rows.Scan(
+			&p.ID,
+			&p.UserId,
+			&p.Title,
+			&p.Content,
+			pq.Array(&p.Tags),
+			&p.User.Email,
+			&p.Version,
+			&p.CreatedAt,
+			&p.CommentsCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, p)
+	}
+
+	return feed, nil
 }

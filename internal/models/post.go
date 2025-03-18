@@ -10,4 +10,11 @@ type Post struct {
 	Version   int       `json:"version"`
 	CreatedAt string    `json:"created_at"`
 	UpdatedAt string    `json:"updated_at"`
+	User      User      `json:"user"`
+}
+
+//post composition -  it's like a computed property of the post struct
+type PostWithMetadata struct {
+	Post
+	CommentsCount int `json:"comments_count"`
 }
