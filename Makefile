@@ -25,3 +25,7 @@ down:
 .PHONY: up
 up:
 	docker-compose up --force-recreate -d
+
+.PHONY: gen-docs
+gen-docs:
+	@swag init -g ./api/main.go -d cmd,internal && swag fmt

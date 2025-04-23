@@ -147,7 +147,10 @@ func (s *PostRepository) GetUserFeed(ctx context.Context, userID int64, fq Pagin
 			LEFT JOIN comments c ON c.post_id = p.id
 			LEFT JOIN users u on u.id = p.user_id
 			JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-			WHERE f.user_id = $1 OR p.user_id = $1
+			WHERE 
+				f.user_id = $1 OR p.user_id = $1 AND
+				(p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%') AND
+				(P.tags @> $5 OR $5 = '{}')
 		GROUP BY
 			p.id, u.email
 		ORDER BY
@@ -158,7 +161,7 @@ func (s *PostRepository) GetUserFeed(ctx context.Context, userID int64, fq Pagin
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset, fq.Search, pq.Array(fq.Tags))
 	if err != nil {
 		return nil, err
 	}

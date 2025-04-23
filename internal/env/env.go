@@ -10,6 +10,7 @@ import (
 type AppConfig struct {
 	PublicHost             string
 	Port                   string
+	APPUrl                 string
 	DBUser                 string
 	DBPassword             string
 	DBAddress              string
@@ -29,6 +30,7 @@ func initConfig() AppConfig {
 	return AppConfig{
 		PublicHost:             GetString("PUBLIC_HOST", "http://localhost"),
 		Port:                   GetString("PORT", ":8080"),
+		APPUrl:                 GetString("EXTERNAL_URL", "http://localhost:8080"),
 		DBUser:                 GetString("DB_USER", "root"),
 		DBPassword:             GetString("DB_PASSWORD", ""),
 		DBAddress:              GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/gosocial?sslmode=disable"),
