@@ -19,5 +19,5 @@ func main() {
 	defer conn.Close()
 	
 	repository := repository.NewRepository(conn)
-	db.Seed(repository)
+	db.Seed(repository, conn)
 }

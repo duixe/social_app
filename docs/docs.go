@@ -117,9 +117,7 @@ var SwaggerInfo = &swag.Spec{
 	Title:            "social APP API",
 	Description:      "This is simple social media developed whiles following a udemy course.",
 	InfoInstanceName: "swagger",
-	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
+    SwaggerTemplate:  docTemplate,
 }
 
 func init() {

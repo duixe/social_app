@@ -9,6 +9,7 @@ import (
 
 type AppConfig struct {
 	PublicHost             string
+	Host                   string
 	Port                   string
 	APPUrl                 string
 	DBUser                 string
@@ -29,6 +30,7 @@ func initConfig() AppConfig {
 
 	return AppConfig{
 		PublicHost:             GetString("PUBLIC_HOST", "http://localhost"),
+		Host:                  GetString("HOST", "localhost"),
 		Port:                   GetString("PORT", ":8080"),
 		APPUrl:                 GetString("EXTERNAL_URL", "http://localhost:8080"),
 		DBUser:                 GetString("DB_USER", "root"),

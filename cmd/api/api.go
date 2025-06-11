@@ -7,30 +7,36 @@ import (
 	"time"
 
 	"github.com/duixe/social_app/docs"
+	"github.com/duixe/social_app/internal/env"
 	"github.com/duixe/social_app/internal/repository"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
+	"go.uber.org/zap"
 )
 
 type application struct {
-	config config
+	config     config
 	repository repository.Repository
-	
+	logger     *zap.SugaredLogger
 }
 
 type config struct {
-	addr string
+	addr   string
 	apiURL string
-	db dbConfig
+	db     dbConfig
+	mail   mailConfig
+}
+
+type mailConfig struct {
+	exp time.Duration
 }
 
 type dbConfig struct {
-	addr string
+	addr         string
 	maxOpenConns int
 	maxIdleConns int
-	maxIdleTime string
+	maxIdleTime  string
 }
 
 func (app *application) mount() http.Handler {
@@ -83,8 +89,8 @@ func (app *application) mount() http.Handler {
 
 func (app *application) run(mux http.Handler) error {
 	docs.SwaggerInfo.Version = version
-	docs.SwaggerInfo.BasePath = "/v1"
-	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Host = env.GetString("HOST", "localhost:8080")
 	srv := &http.Server{
 		Addr:         app.config.addr,
 		Handler:      mux,

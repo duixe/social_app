@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -80,12 +81,13 @@ var comments = []string{
 	"Thanks for the information, very useful.",
 }
 
-func Seed(repository repository.Repository) {
+func Seed(repository repository.Repository, db *sql.DB) {
 	ctx := context.Background()
 
 	users := generateUsers(100)
+	tx, _ := db.BeginTx(ctx, nil)
 	for _, user := range users {
-		if err := repository.Users.Create(ctx, user); err != nil {
+		if err := repository.Users.Create(ctx, tx, user); err != nil {
 			log.Println("Error creating user", err)
 			return
 		}
@@ -126,8 +128,9 @@ func generateUsers(num int) []*models.User {
 			LastName:  lastName,
 			Username:  username,
 			Email:     email,
-			Password:  "password",
 		}
+
+		users[i].Password.Set("password")
 	}
 
 	return users

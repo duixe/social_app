@@ -6,6 +6,7 @@ import (
 	"github.com/duixe/social_app/internal/db"
 	"github.com/duixe/social_app/internal/env"
 	"github.com/duixe/social_app/internal/repository"
+	"go.uber.org/zap"
 )
 
 const version = "1.1.0"
@@ -40,6 +41,10 @@ func main() {
 		},
 	}
 
+	//initialize the logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
 	//instantiate db conn
 	db, err := db.New(
 		cfg.db.addr,
@@ -48,11 +53,11 @@ func main() {
 		cfg.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Panic(err)
+		logger.Panic(err)
 	}
 
 	defer db.Close()
-	log.Println("database connection is successful")
+	logger.Info("database connection is successful")
 
 	//instatiate the repository by passing in the instantiated db
 	repository := repository.NewRepository(db)
@@ -60,6 +65,7 @@ func main() {
 	app := &application{
 		config:     cfg,
 		repository: repository,
+		logger:     logger,
 	}
 
 	mux := app.mount()

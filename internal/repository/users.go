@@ -3,15 +3,23 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"time"
 
 	"github.com/duixe/social_app/internal/models"
+)
+
+
+var (
+	ErrDuplicateEmail    = errors.New("a user with that email already exists")
+	ErrDuplicateUsername = errors.New("a user with that username already exists")
 )
 
 type UsersRepository struct {
 	db *sql.DB
 }
 
-func (s *UsersRepository) Create (ctx context.Context, user *models.User) error {
+func (s *UsersRepository) Create(ctx context.Context, tx *sql.Tx, user *models.User) error {
 	query := `
 		INSERT INTO users (first_name, last_name, username, password, email) 
 		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at
@@ -20,7 +28,7 @@ func (s *UsersRepository) Create (ctx context.Context, user *models.User) error 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
 	defer cancel()
 
-	err := s.db.QueryRowContext(
+	err := tx.QueryRowContext(
 		ctx,
 		query,
 		user.FirstName,
@@ -33,8 +41,16 @@ func (s *UsersRepository) Create (ctx context.Context, user *models.User) error 
 		&user.CreatedAt,
 	)
 	if err != nil {
-		return err
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
+			return ErrDuplicateEmail
+		case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:
+			return ErrDuplicateUsername
+		default:
+			return err
+		}
 	}
+
 
 	return nil
 }
@@ -73,4 +89,33 @@ func (s *UsersRepository) GetByID(ctx context.Context, userID int64) (*models.Us
 	}
 
 	return user, nil
+}
+
+func (s *UsersRepository) CreateAndInvite(ctx context.Context, user *models.User, token string, invitationExp time.Duration) error {
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		if err := s.Create(ctx, tx, user); err != nil {
+			//this will cause the withTx method to rollback the DB transaction
+			return err
+		}
+
+		if err := s.createUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *UsersRepository) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userId int64) error {
+	query := `INSERT INTO user_invitations (token, user_id, expiry_date) VALUES ($1, $2, $3)`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeOutDuration)
+	defer cancel()
+
+	_, err := tx.ExecContext(ctx, query, token, userId, time.Now().Add(exp))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
