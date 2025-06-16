@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/duixe/social_app/internal/db"
 	"github.com/duixe/social_app/internal/env"
@@ -38,6 +39,9 @@ func main() {
 			maxOpenConns: int(env.GetInt("DB_MAX_OPEN_CONNS", 30)),
 			maxIdleConns: int(env.GetInt("DB_MAX_IDLE_CONNS", 30)),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
 		},
 	}
 

@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.25.0 // indirect

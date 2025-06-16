@@ -28,6 +28,7 @@ type Repository struct {
 		GetByID(context.Context, int64) (*models.User, error)
 		Create(context.Context, *sql.Tx, *models.User) error
 		CreateAndInvite(ctx context.Context, user *models.User, token string, inviationExp time.Duration) error
+		Activate(context.Context, string) error
 	}
 	Comments interface {
 		Create(context.Context, *models.Comment) error

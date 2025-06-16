@@ -29,3 +29,4 @@ up:
 .PHONY: gen-docs
 gen-docs:
 	@swag init -g ./api/main.go -d cmd,internal && swag fmt
+	sed -i.bak '/LeftDelim/d;/RightDelim/d' docs/docs.go
